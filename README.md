@@ -11,4 +11,5 @@
 | Hollows Hunter | https://github.com/hasherezade/hollows_hunter                               |
 | Sysinternals   | https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite |
 | Process Hacker | https://sourceforge.net/projects/processhacker/                             |
+| Wireshark      | https://www.wireshark.org/download.html                                     |
 | Thunderbird    | https://www.thunderbird.net/en-US/                                          |
