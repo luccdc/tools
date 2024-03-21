@@ -296,38 +296,20 @@ $AllServers = gc all.txt
 
 $replace_job = Start-Job -name 'replace hostname' -ScriptBlock ${Function:Replace} -ArgumentList $cd
 
-$extract_sysinternals_job = Start-Job -name 'extract sysinternals'-ScriptBlock {
-    param($downloads)
-    gci -file $downloads | ?{$_.name -like "*Sysinternals*"} | %{Expand-Archive $_.Fullname $downloads\Sysinternals -Force}
-} -ArgumentList $downloads
-
 Write-Host "Waiting to import GPOs" -ForegroundColor Green
 $replace_job | Wait-Job
 Write-Host "Importing GPOs" -ForegroundColor Green
 $ou_gpo_job = Start-Job -name 'import gpos' -ScriptBlock ${Function:ImportGPO1} -ArgumentList $cd
 
-
-
-$extract_sysinternals_job | Wait-Job
 Write-Host "Copying tools to SharingIsCaring folder" -ForegroundColor Green
-GetTools $cd $downloads
 Write-Host "Compressing tools folder" -ForegroundColor Green
-$compress_tools_job = Start-Job -name 'compress tools' -ScriptBlock {
-    param($cd)
-    Compress-Archive $cd\SharingIsCaring\tools $cd\SharingIsCaring\tools.zip
-} -ArgumentList $cd
 $ou_gpo_job | Wait-Job
 Write-Host "Creating OUs and distributing computers" -ForegroundColor Green
 $distribute_ou_job = Start-Job -name 'create ous and distribute hosts' -ScriptBlock ${Function:CreateOUAndDistribute}
 Write-Host "Starting smb share" -ForegroundColor Green
 $start_share_job = Start-Job -name 'start smb share' -ScriptBlock ${Function:StartSMBShare} -ArgumentList $cd
-$compress_tools_job | Wait-Job
 $distribute_ou_job | Wait-Job 
 $start_share_job | Wait-Job 
-
-Write-Host "`nManually upate the group policy configuration on each member in the domain" -ForegroundColor Yellow
-gpupdate /force
-Resume
 
 RemoveLinks $ServersList $DCList
 
@@ -335,6 +317,5 @@ New-GPLink -Name "PSLogging" -Target "$root" -LinkEnabled Yes -Enforced Yes > $N
 
 Write-Host "The program has completed successfully. Now, Manually update the group policy configuration on all computers in the domain" -ForegroundColor Green
 gpmc.msc
-# DeleteDriver $cd
-gpupdate /force 
+start-job -scriptblock {gpupdate /force}
 powershell
